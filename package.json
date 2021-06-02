@@ -1,0 +1,19 @@
+{
+  "name": "attotrain-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-session": "^1.17.0",
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.27",
+    "mysql": "^2.17.1"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo Error: no test specified && exit 1"
+  }
+}

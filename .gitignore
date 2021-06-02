@@ -1,0 +1,15 @@
+/node_modules
+/ssl
+package-lock.json
+php/.history/
+.history/
+.idea/lk_server.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/encodings.xml
+zip
+.env_local.txt
+.env_prod.txt
+/cert/
