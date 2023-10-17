@@ -1,17 +1,7 @@
-/*
-	         AUTHOR: Anindya Dutta
- 	        SUMMARY: THIS FILE WILL HAVE SHARED INFO OR FUNCTIONS LIKE DATABASE CONNECTION. THIS FILE CAN BE SHARED BETWEEN
-                     CLASSES TO CALL/USER COMMON FUNCTIONS.
-            PURPOSE: TO PROVIDE ACCESS TO COMMON OR SHAREABLE FUNCTIONS BETWEEN CLASSES.
-    IMPORTING FILES: db.js
-  SUBSCRIBING FILES: account.js
-   LAST COMMIT DATE: June 2, 2021
-*/
-
-// INCLUDING MAIN DATABASE CLASS INTO THIS CLASS SO WE CAN PERFORM INSERT/UPDATE/DELETE OPERATIONS ON MAIN DATABASE.
+// INCLUDING MAIN DATABASE CLASS INTO THIS CLASS SO WE CAN PERFORM INSERT/UPDATE/DELETE OPERATIONS ON DATABASE.
 const dbClass = require("../database/db");
 
-// NODE MODULE THAT WE WILL USE TO ENCRYPT THE USER PASSWORD BEFORE STORING IT INTO USER TABLE IN DATABASE.
+// NODE MODULE THAT WE WILL USE TO ENCRYPT THE USER PASSWORD BEFORE STORING IT IN THE USER TABLE IN THE DATABASE.
 const crypto = require ('crypto');
 
 // STARTING THE User CLASS.
@@ -49,32 +39,8 @@ class User
 			// RUNNING THE QUERY.
 			this.#Db.getRow(user_query).then( user =>
 			{
-				// QUERY TO SELECT USER ROLE ID AND ROLE NAME.
-				let role_query = "SELECT ur.role_id, r.role FROM user_role ur JOIN role r ON r.role_id = ur.role_id WHERE ur.user_id="+user_id; 
-
-				// RUNNING THE QUERY.
-				this.#Db.getRow(role_query).then( roleData =>
-				{
-					// QUERY TO SELECT THE USER ROLE PAGES.
-					let rolepage_query = "SELECT page_id FROM role_page WHERE role_id='"+roleData['role_id']+"'";
-
-					// RUNNING THE QUERY ON MAIN DATABASE.
-					this.#Db.getRow(rolepage_query).then( pageList =>
-					{
-						// FULFILLING THE PROMISE OF SENDING USER DATA THAT WE RETRIEVED IN PREVIOUS STEPS.
-						resolve({user_data: user, userrole_data: roleData, userpage_data: pageList});
-
-					}).catch((error)=>
-					{
-						// WE COULD NOT GET THE DATA FROM DATABASE. REJECTING THE PROMISE.
-						reject({success: false, error : error});
-					});
-					
-				}).catch((error)=>
-				{
-					// WE COULD NOT GET THE DATA FROM DATABASE. REJECTING THE PROMISE.
-					reject({success: false, error : error});
-				});
+				// FULFILLING THE PROMISE OF SENDING USER DATA THAT WE RETRIEVED IN PREVIOUS STEPS.
+				resolve({user_data: user, success: true});
 			}).catch((error)=>
 			{
 				// WE COULD NOT GET THE DATA FROM DATABASE. REJECTING THE PROMISE.
