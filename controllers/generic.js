@@ -1,21 +1,10 @@
-/*
-		   FILENAME: controllers/generic.js
-	         AUTHOR: Anindya Dutta
- 	        SUMMARY: THIS IS A GENERAL PURPOSE CLASS TO HANDLE GENERAL REQUESTS OF CLIENTS LIKE GET APPLICATION INITIAL DATA SERVER.
-            PURPOSE: TO HANDLE THE COMMON REQUESTS.
-    IMPORTING FILES: operator.js | store.js | user.js
-  SUBSCRIBING FILES: index.js
-   LAST COMMIT DATE: July 18, 2020
-*/
-
-// OPERATOR CLASS IS USED TO GET INSTANCES OF DIFFERENT DATABASES. IT ALSO INCLUDES SOME COMMON AND GENERAL PURPOSE
-// FUNCTIONS THAT CAN BE REQUIRED BY DIFFERENT CLASSES. LIKE GETTING SITE VARIABLES OR MESSAGES DATA.
+// OPERATOR CLASS IS USED TO GET INSTANCES OF DATABASES.
 const operatorClass = require ('../classes/operator');
 
-// THIS FILE CONTAINS COMMON VARIABLES THAT WE CAN SHARE BETWEEN CLASSES. FOR EXAMPLE SITEVARIABLE, SITEMESSAGES ETC.
+// THIS FILE CONTAINS COMMON VARIABLES THAT WE CAN SHARE BETWEEN CLASSES.
 const store = require ('../store');
 
-// USER CLASS CONTAINS USER RELATED ACTIVITIES LIKE GETTING USER PROFILE INFORMATION FROM USER TABLE,
+// USER CLASS CONTAINS USER-RELATED ACTIVITIES LIKE GETTING USER PROFILE INFORMATION FROM USER TABLE,
 // GETTING THE USER ROLE, AUTHENTICATING USER, ENCRYPTING PASSWORDS ETC.
 const userClass = require ('../classes/user');
 
@@ -34,39 +23,17 @@ class Generic
 	constructor()
 	{
 		this.#operator = new operatorClass(); // CREATING A NEW INSTANCE OF OPERATOR CLASS SO WE CAN USE ITS OBJECTS.
-		this.userClass = new userClass(); // CREATING NEW INSTANCE OF USER CLASS SO WE CAN GET USER PROPERTIES.
 	}
 	
 	// THIS FUNCTION WILL HANDLE GET/POST REQUESTS MADE BY USER FROM THE ANGULAR APPLICATION RUNNING ON CLIENT SIDE.
 	handleRequests (app)
 	{
-		
-		// REQUEST TO SEND ALL FORBIDDEN WORDS
-		app.get ('/api/forbiddenwords', (req, res) =>
-		{
-			// RUN THE QUERY ON TABLE.
-			this.#operator.getStaticDbInstance().getRows ("SELECT * from `forbiddenword`").then (rows =>
-			{
-				res.send ({success: true, rows: rows});
-			},
-			err =>
-			{
-				// THERE WAS SOME ERROR IN PERFORMING THE OPERATION, SO WE WILL SEND THE ERROR TO CLIENT.
-				res.send ({success: false, message: "system failed to get table data forbiddenword" , error_code: 124});
-				console.log ("error occurred, error code 114",err);
-			});
-		});
-
-
-		// HANDLING REQUEST TO GET SITEVARIABLES AND OTHER STATIC DATA FROM DATABASE DURING THE APP INITIALIZATION.
+		// HANDLING REQUEST FROM CLIENT DURING THE APP INITIALIZATION.
 		app.get ('/api/getAppInitialData', (req, res) =>
 		{
-			let data= {}; // ARRAY TO HOLD ROOM STATES DATA.
-
-			data ["sitevariables"] = store.siteVariables; // ADDING SITE VARIABLE DATA INTO ARRAY. WE WILL SEND THIS ARRAY TO CLIENT.
+			let data= {}; 
+			data ["sitevariables"] = store.siteVariables; // ADDING SITE VARIABLE DATA INTO ARRAY.
 			data ["sitemessages"] = store.siteMessages; // ADDING MESSAGES TO DATA ARRAY.
-			data ["sitepages"] = store.sitePages; // ADDING PAGES TO DATA ARRAY.
-
 			res.send(data); // SENDING DATA TO CLIENT.
 		});
 
