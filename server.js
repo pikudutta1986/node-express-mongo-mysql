@@ -11,21 +11,30 @@ const app = express();
 // PARSE PAYLOAD AS JSON FOR EXPRESS APP
 app.use(express.json());
 
-// import mysql the routings
-import {MysqlProductRoutings} from "./routes/mysql_product.js";
-// REGISTER MYSQL PRODUCT ROUTINGS
-new MysqlProductRoutings(app);
-
 // IMPORT MONGO CONNECTION 
 import {connectToMongo} from './database/mongodb.js';
 // CONNECT TO MONGO DB
 connectToMongo();
 
+//----------------------------------
+// IMPORT MYSQL AUTH ROUTINGS
+import { AuthRoutes } from "./routes/auth_routes.js";
+// REGISTER MYSQL PRODUCT ROUTINGS
+new AuthRoutes(app);
+
+//----------------------------------
+// IMPORT MYSQL PRODUCT ROUTINGS
+import {MysqlProductRoutings} from "./routes/mysql_product.js";
+// REGISTER MYSQL PRODUCT ROUTINGS
+new MysqlProductRoutings(app);
+
+//----------------------------------
 // IMPORT MONGO BLOG ROUTINGS
 import {MongoBlogRoutings} from "./routes/mongo_blog.js";
 // REGISTER MONGO BLOG ROUTINGS
 new MongoBlogRoutings(app);
 
+//----------------------------------
 // IMPORT MONGO ORDER ROUTINGS
 import {MongoOrderRoutings} from "./routes/mongo_order.js";
 // REGISTER MONGO ORDER ROUTINGS

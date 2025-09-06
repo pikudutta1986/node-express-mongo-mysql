@@ -40,7 +40,7 @@ export class MysqlProductService
         } catch (error)
         {
             console.error("Error inserting product:",error);
-            return {success: false,message: "Failed to insert product.",error};
+            throw new Error("Error inserting product:" + error.message);
         }
     }
 
@@ -58,11 +58,15 @@ export class MysqlProductService
                 return {success: false,message: "Product not found."};
             }
 
-            return {success: true,data: rows[0],message: "Product fetched successfully."};
+            return {
+                success: true,
+                data: rows[0],
+                message: "Product fetched successfully."
+            };
         } catch (error)
         {
             console.error("Error fetching product by ID:",error);
-            return {success: false,message: "Failed to fetch product.",error};
+            throw new Error("Error inserting product:" + error.message);
         }
     }
 
@@ -75,11 +79,20 @@ export class MysqlProductService
             const sqlString = `SELECT * FROM product ORDER BY created_at DESC`;
             const [rows] = await pool.execute(sqlString);
 
-            return {success: true,data: rows,message: "Products fetched successfully."};
+            if (!rows.length)
+            {
+                return {success: false,message: "Products not found."};
+            }
+
+            return {
+                success: true,
+                data: rows,
+                message: "Products fetched successfully."
+            };
         } catch (error)
         {
-            console.error("Error fetching all products:",error);
-            return {success: false,message: "Failed to fetch products.",error};
+            console.error("Error fetching products:",error);
+            throw new Error("Failed to fetch products: " + error.message);
         }
     }
 
@@ -114,11 +127,15 @@ export class MysqlProductService
                 return {success: false,message: "No product found to update."};
             }
 
-            return {success: true,data: {affectedRows: result.affectedRows},message: "Product updated successfully."};
+            return {
+                success: true,
+                data: {affectedRows: result.affectedRows},
+                message: "Product updated successfully."
+            };
         } catch (error)
         {
             console.error("Error updating product:",error);
-            return {success: false,message: "Failed to update product.",error};
+            throw new Error("Error updating product:" + error.message);
         }
     }
 
@@ -136,11 +153,15 @@ export class MysqlProductService
                 return {success: false,message: "No product found to delete."};
             }
 
-            return {success: true,data: {affectedRows: result.affectedRows},message: "Product deleted successfully."};
+            return {
+                success: true,
+                data: {affectedRows: result.affectedRows},
+                message: "Product deleted successfully."
+            };
         } catch (error)
         {
             console.error("Error deleting product:",error);
-            return {success: false,message: "Failed to delete product.",error};
+            throw new Error("Error deleting product:" + error.message);
         }
     }
 
@@ -178,11 +199,15 @@ export class MysqlProductService
 
             const [rows] = await pool.execute(sqlString,values);
 
-            return {success: true,data: rows,message: "Search results fetched successfully."};
+            return {
+                success: true,
+                data: rows,
+                message: "Search results fetched successfully."
+            };
         } catch (error)
         {
             console.error("Error searching products:",error);
-            return {success: false,message: "Failed to search products.",error};
+            throw new Error("Error searching products:" + error.message);
         }
     }
 }
