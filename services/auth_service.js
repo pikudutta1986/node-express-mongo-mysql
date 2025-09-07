@@ -17,7 +17,7 @@ export class AuthService
             const {name, email, password} = userData;
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            const sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+            const sql = "INSERT INTO user (name, email, password) VALUES (?, ?, ?)";
             const [result] = await (await this.mysqlConnectionPool).execute(sql,[
                 name,
                 email,
@@ -45,7 +45,7 @@ export class AuthService
     {
         try
         {
-            const sql = "SELECT * FROM users WHERE email = ?";
+            const sql = "SELECT * FROM user WHERE email = ?";
             const [rows] = await (await this.mysqlConnectionPool).execute(sql,[
                 email
             ]);
