@@ -16,29 +16,38 @@ import {connectToMongo} from './database/mongodb.js';
 // CONNECT TO MONGO DB
 connectToMongo();
 
-//----------------------------------
-// IMPORT MYSQL AUTH ROUTINGS
-import { AuthRoutes } from "./routes/auth_routes.js";
-// REGISTER MYSQL PRODUCT ROUTINGS
+
+// ================================================
+// AUTH ROUTES
+// ================================================
+// IMPORT MYSQL AUTH ROUTES
+import { AuthRoutes } from "./routes/AuthRoutes.js";
+// REGISTER MYSQL AUTH ROUTES
 new AuthRoutes(app);
 
-//----------------------------------
-// IMPORT MYSQL PRODUCT ROUTINGS
-import {MysqlProductRoutings} from "./routes/mysql_product.js";
-// REGISTER MYSQL PRODUCT ROUTINGS
-new MysqlProductRoutings(app);
+// ================================================
+// PRODUCT ROUTES
+// ================================================
+// IMPORT MYSQL PRODUCT ROUTES
+import {MysqlProductRoutes} from "./routes/MysqlProductRoutes.js";
+// REGISTER MYSQL PRODUCT ROUTES
+new MysqlProductRoutes(app);
 
-//----------------------------------
-// IMPORT MONGO BLOG ROUTINGS
-import {MongoBlogRoutings} from "./routes/mongo_blog.js";
-// REGISTER MONGO BLOG ROUTINGS
-new MongoBlogRoutings(app);
+// ================================================
+// BLOG ROUTES
+// ================================================
+// IMPORT MONGO BLOG ROUTES
+import {MongoBlogRoutes} from "./routes/MongoBlogRoutes.js";
+// REGISTER MONGO BLOG ROUTES
+new MongoBlogRoutes(app);
 
-//----------------------------------
-// IMPORT MONGO ORDER ROUTINGS
-import {MongoOrderRoutings} from "./routes/mongo_order.js";
-// REGISTER MONGO ORDER ROUTINGS
-new MongoOrderRoutings(app);
+// ================================================
+// ORDER ROUTES
+// ================================================
+// IMPORT MONGO ORDER ROUTES
+import {MongoOrderRoutes} from "./routes/MongoOrderRoutes.js";
+// REGISTER MONGO ORDER ROUTES
+new MongoOrderRoutes(app);
 
 // START THE EXPRESS SERVER AND LISTEN ON SPECIFIED PORT
 app.listen(process.env.PORT,() =>

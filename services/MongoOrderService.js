@@ -11,7 +11,7 @@ export class MongoOrderService {
     }
 
     // CREATE ORDER
-    async createOrder(customer, productList) {
+    async createOrder(user_id, productList) {
         try {
             let orderItems = [];
             let orderTotal = 0;
@@ -43,8 +43,7 @@ export class MongoOrderService {
 
             // Save to MongoDB
             const order = new Order({
-                customerName: customer.name,
-                customerEmail: customer.email,
+                user_id: user_id,
                 products: orderItems,
                 orderTotal,
                 status: "pending",
@@ -55,18 +54,18 @@ export class MongoOrderService {
             return { success: true, data: result, message: "Order created successfully" };
         } catch (error) {
             console.error("Error creating order:", error);
-            return { success: false, message: error.message };
+            throw new Error("Login failed: " + error.message);
         }
     }
 
     // GET ALL ORDERS
-    async getAllOrders() {
+    async getAllOrders(filterOptions) {
         try {
-            const orders = await Order.find({});
+            const orders = await Order.find(filterOptions);
             return { success: true, data: orders };
         } catch (error) {
             console.error("Error fetching orders:", error);
-            return { success: false, message: error.message };
+            throw new Error("Login failed: " + error.message);
         }
     }
 
@@ -80,7 +79,7 @@ export class MongoOrderService {
             return order;
         } catch (error) {
             console.error("Error fetching order:", error);
-            return null;
+            throw new Error("Login failed: " + error.message);
         }
     }
 
@@ -91,7 +90,7 @@ export class MongoOrderService {
                 return null;
             }
 
-            const allowedFields = ["customerName", "customerEmail", "status", "products"];
+            const allowedFields = ["products", "status"];
             const updateFields = {};
 
             for (const field of allowedFields) {
@@ -113,7 +112,7 @@ export class MongoOrderService {
             return updatedOrder;
         } catch (error) {
             console.error("Error updating order:", error);
-            return null;
+            throw new Error("Login failed: " + error.message);
         }
     }
 
@@ -128,7 +127,7 @@ export class MongoOrderService {
             return result ? true : false;
         } catch (error) {
             console.error("Error deleting order:", error);
-            return null;
+            throw new Error("Login failed: " + error.message);
         }
     }
 }
