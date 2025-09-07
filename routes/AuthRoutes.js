@@ -29,7 +29,7 @@ export class AuthRoutes {
             } catch (error) {
                 console.error("ERROR IN REGISTER:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -48,7 +48,7 @@ export class AuthRoutes {
             } catch (error) {
                 console.error("ERROR IN LOGIN:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
     }

@@ -1,8 +1,8 @@
 
-// IMPORT MONGO BLOG SCHEMA
+// IMPORT MONGO BLOG MODEL
 import blog from "../mongo_models/blog.js";
 
-// MONGO BLOG SERVICE TO OPERATE CURD OPERATIONS ON MONGO BLOG SCHEMA 
+// MONGO BLOG SERVICE TO OPERATE CURD OPERATIONS ON MONGO BLOG MODEL 
 export class MongoBlogService
 {
     constructor()
@@ -20,7 +20,10 @@ export class MongoBlogService
         {
             const newBlog = new blog(object);
             const result = await newBlog.save();
-            if (!result) return {success: false,message: "Unable to create blog."};
+            if (!result) {
+                // THROW INSERT BLOG FAILED ERROR
+                throw new Error("Insert blog failed.");
+            }
             return {
                 success: true,
                 data: result,
@@ -63,6 +66,10 @@ export class MongoBlogService
     {
         try
         {
+            // IF THE ID IS NOT VALID
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error("Not a valid id");
+            }
             // GET BLOG BY ID FROM MONGO
             const result = await blog.findById(id);
             // IF NOT FOUND
@@ -71,7 +78,11 @@ export class MongoBlogService
                 throw new Error("Blog not found");
             }
             // RETURN THE FUNCTION RESPONSE
-            return {success: true, data: result, message: "Single blog from mongo database."};
+            return {
+                success: true, 
+                data: result, 
+                message: "Single blog from mongo database."
+            };
         } catch (error)
         {
             // THROW GET BLOG FAILED ERROR
@@ -86,6 +97,10 @@ export class MongoBlogService
     {
         try
         {
+            // IF THE ID IS NOT VALID
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error("Not a valid id");
+            }
             // UPDATE THE BLOG IN MONGO
             const result = await blog.findByIdAndUpdate(id, object, {new: true});
             // IF NOT UPDATED
@@ -94,7 +109,11 @@ export class MongoBlogService
                 throw new Error("Blog not found");
             }
             // RETURN THE FUNCTION RESPONSE
-            return {success: true, data: result, message: "Blog updated"};
+            return {
+                success: true, 
+                data: result, 
+                message: "Blog updated successfully"
+            };
         } catch (error)
         {
             // THROW BLOG UPDATE FAILED ERROR
@@ -109,6 +128,10 @@ export class MongoBlogService
     {
         try
         {
+            // IF THE ID IS NOT VALID
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error("Not a valid id");
+            }
             // DELETE ONE BLOG IN MONGO
             const result = await blog.findByIdAndDelete(id);
             // IF NOT DELETED
@@ -118,7 +141,10 @@ export class MongoBlogService
             }
 
             // RETURN THE FUNCTION RESPONSE
-            return {success: true, data: result, message: "Blog deleted"};
+            return {
+                success: true,
+                message: "Blog deleted successfully"
+            };
         } catch (error)
         {
             // THROW ONE DELETE FAILED ERROR
@@ -136,7 +162,10 @@ export class MongoBlogService
             // DELETE ALL BLOG IN MONGO
             const result = await blog.deleteMany({});
             // RETURN THE FUNCTION RESPONSE
-            return {success: true, data: result, message: "All Blog deleted"};
+            return {
+                success: true, 
+                message: "All Blog deleted successfully"
+            };
         } catch (error)
         {
             // THROW ALL DELETE FAILED ERROR

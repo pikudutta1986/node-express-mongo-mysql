@@ -5,7 +5,7 @@ import { MysqlProductService } from "../services/MysqlProductService.js";
 import { AuthMiddleware } from "../middleware/AuthMiddleware.js";
 
 // IMPORT ROLE-BASED MIDDLEWARE TO RESTRICT ACCESS BY USER ROLE
-import { roleMiddleware } from "./middleware/roleMiddleware.js";
+import { RoleMiddleware } from "../middleware/RoleMiddleware.js";
 
 // IMPORT MOMENT FOR DATE/TIME HANDLING
 import moment from "moment";
@@ -25,7 +25,7 @@ export class MysqlProductRoutes {
         // ================================================
         // CREATE (INSERT) PRODUCT - ONLY ADMIN ALLOWED
         // ================================================
-        app.post("/api/product", AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.post("/api/product", AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // GET CURRENT TIMESTAMP FOR CREATED_AT FIELD
                 const created_at = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -49,7 +49,7 @@ export class MysqlProductRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR INSERTING PRODUCT:", error);
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -65,7 +65,7 @@ export class MysqlProductRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING PRODUCTS:", error);
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -81,14 +81,14 @@ export class MysqlProductRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING PRODUCT BY ID:", error);
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // UPDATE PRODUCT - ONLY ADMIN ALLOWED
         // ================================================
-        app.put("/api/product/:id", AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.put("/api/product/:id", AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // BUILD UPDATE OBJECT FROM REQUEST BODY
                 let requestObj = {
@@ -108,14 +108,14 @@ export class MysqlProductRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR UPDATING PRODUCT:", error);
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // DELETE PRODUCT - ONLY ADMIN ALLOWED
         // ================================================
-        app.delete("/api/product/:id", AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.delete("/api/product/:id", AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // CALL SERVICE TO DELETE PRODUCT FROM DATABASE
                 const result = await this.productService.deleteProduct(mysqlConnectionPool, req.params.id);
@@ -124,7 +124,7 @@ export class MysqlProductRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR DELETING PRODUCT:", error);
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ message: error.message });
             }
         });
     }

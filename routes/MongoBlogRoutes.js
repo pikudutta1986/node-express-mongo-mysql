@@ -5,7 +5,7 @@ import { MongoBlogService } from "../services/MongoBlogService.js";
 import { AuthMiddleware } from "../middleware/AuthMiddleware.js";
 
 // IMPORT ROLE-BASED MIDDLEWARE TO RESTRICT ACCESS BY USER ROLE
-import { roleMiddleware } from "./middleware/roleMiddleware.js";
+import { RoleMiddleware } from "../middleware/RoleMiddleware.js";
 
 export class MongoBlogRoutes {
     constructor(app) {
@@ -21,14 +21,14 @@ export class MongoBlogRoutes {
         // ================================================
         // CREATE (INSERT) BLOG - ONLY ADMIN ALLOWED
         // ================================================
-        app.post('/api/blog',  AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.post('/api/blog', AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // CALL SERVICE TO INSERT BLOG
                 const result = await this.blogService.insertBlog(req.body);
                 res.status(201).json(result);
             } catch (error) {
-                // RETURN ERROR IF INSERT FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -47,8 +47,8 @@ export class MongoBlogRoutes {
                 const result = await this.blogService.getBlog(filterObject);
                 res.status(201).json(result);
             } catch (error) {
-                // RETURN ERROR IF FETCH FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -71,50 +71,50 @@ export class MongoBlogRoutes {
 
                 res.status(200).json(result);
             } catch (error) {
-                // RETURN ERROR IF FETCH FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // UPDATE BLOG - ONLY ADMIN ALLOWED
         // ================================================
-        app.put('/api/blog/:id',  AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.put('/api/blog/:id', AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // CALL SERVICE TO UPDATE BLOG WITH GIVEN ID
                 const result = await this.blogService.updateBlog(req.params.id, req.body);
                 res.status(201).json(result);
             } catch (error) {
-                // RETURN ERROR IF UPDATE FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // DELETE ALL BLOG - ONLY ADMIN ALLOWED
         // ================================================
-        app.delete('/api/blog', AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.delete('/api/blog', AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // CALL SERVICE TO DELETE ALL BLOGS
                 const result = await this.blogService.deleteAll();
                 res.status(201).json(result);
             } catch (error) {
-                // RETURN ERROR IF DELETE FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // DELETE BLOG - ONLY ADMIN ALLOWED
         // ================================================
-        app.delete('/api/blog/:id', AuthMiddleware, roleMiddleware("ADMIN"), async (req, res) => {
+        app.delete('/api/blog/:id', AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
                 // CALL SERVICE TO DELETE SINGLE BLOG
                 const result = await this.blogService.deleteBlog(req.params.id);
                 res.status(201).json(result);
             } catch (error) {
-                // RETURN ERROR IF DELETE FAILS
-                res.status(500).json({ error: error.message });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
     }

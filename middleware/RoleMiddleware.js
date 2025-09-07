@@ -3,7 +3,7 @@
 //router.get("/admin", AuthMiddleware, roleMiddleware("ADMIN"), (req, res) => {
     //res.json({ message: "Hello Admin!" });
 //});
-export function roleMiddleware(...allowedRoles)
+export function RoleMiddleware(...allowedRoles)
 {
     return (req,res,next) =>
     {

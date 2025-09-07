@@ -4,6 +4,9 @@ import { MongoOrderService } from "../services/MongoOrderService.js";
 // IMPORT AUTH MIDDLEWARE TO VERIFY JWT TOKEN AND ATTACH USER INFO
 import { AuthMiddleware } from "../middleware/AuthMiddleware.js";
 
+// IMPORT ROLE-BASED MIDDLEWARE TO RESTRICT ACCESS BY USER ROLE
+import { RoleMiddleware } from "../middleware/RoleMiddleware.js";
+
 export class MongoOrderRoutes {
     constructor(app) {
         // CREATE AN INSTANCE OF MONGO ORDER SERVICE
@@ -26,9 +29,8 @@ export class MongoOrderRoutes {
 
                 // VALIDATE REQUEST BODY
                 if (!products || !Array.isArray(products)) {
-                    return res
-                        .status(400)
-                        .json({ success: false, message: "INVALID REQUEST BODY" });
+                    // SEND ERROR RESPONSE
+                    res.status(400).json({ message: "No products found to create order" });
                 }
 
                 // GET USER ID FROM AUTH MIDDLEWARE
@@ -36,14 +38,10 @@ export class MongoOrderRoutes {
 
                 // CALL SERVICE TO CREATE ORDER
                 const result = await this.orderService.createOrder(user_id, products);
-
-                // RETURN SUCCESS OR FAILURE BASED ON RESULT
-                res.status(result.success ? 201 : 400).json(result);
+                res.status(201).json(result);
             } catch (error) {
-                console.error("ERROR CREATING ORDER:", error);
-                res
-                    .status(500)
-                    .json({ success: false, message: "INTERNAL SERVER ERROR" });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -59,6 +57,7 @@ export class MongoOrderRoutes {
                 let role = req.user.role;
                 // FILTER OPTIONS FOR ORDER DATA IN MONGO DB
                 let filterOptions = {};
+
                 // IF USER IS NOT ADMIN
                 if (role != 'ADMIN') {
                     // ADD USER ID TO FILTER OPTION
@@ -67,12 +66,11 @@ export class MongoOrderRoutes {
                 // CALL SERVICE TO FETCH ALL ORDERS
                 const result = await this.orderService.getAllOrders(filterOptions);
                 // RETURN ORDERS
-                res.json(result);
+                res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING ORDERS:", error);
-                res
-                    .status(500)
-                    .json({ success: false, message: "INTERNAL SERVER ERROR" });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -86,19 +84,14 @@ export class MongoOrderRoutes {
 
                 // IF ORDER DOES NOT EXIST, RETURN 404
                 if (!result) {
-                    return res.status(404).json({ success: false, message: "Order not found." });
+                    return res.status(400).json({error: "Order id not found." });
                 }
-
-                
-
-
-                // RETURN ORDER DETAILS
-                res.json(result);
+                // RETURN ORDERS
+                res.status(201).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING ORDER BY ID:", error);
-                res
-                    .status(500)
-                    .json({ success: false, message: "INTERNAL SERVER ERROR" });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
@@ -113,93 +106,71 @@ export class MongoOrderRoutes {
 
                 // VALIDATE UPDATE REQUEST BODY
                 if (!products && !status) {
-                    return res
-                        .status(400)
-                        .json({ success: false, message: "NOTHING TO UPDATE" });
+                    // SEND ERROR RESPONSE
+                    res.status(400).json({ message: "Nothing to update" });
                 }
 
                 // GET USER ID FROM AUTH MIDDLEWARE
                 let user_id = req.user.id;
 
+                // GET USER ROLE FROM AUTH MIDDLEWARE
+                let role = req.user.role;
+
                 // FETCH ORDER DATA
                 let orderData = await this.orderService.getOrderById(req.params.id);
 
-                // CHECK IF ORDER BELONGS TO THE LOGGED-IN USER
-                if (orderData.user_id == user_id) {
+                // IF ORDER NOT FOUND
+                if (!orderData) {
+                    // SEND ERROR RESPONSE
+                    res.status(400).json({ message: "Order not found" });
+                }
+
+                // CHECK IF ORDER BELONGS TO THE USER OR THE USER IS ADMIN
+                if (orderData.user_id == user_id || role == 'ADMIN') {
                     // UPDATE THE ORDER
                     const result = await this.orderService.updateOrder(req.params.id, {
-                        user_id,
                         products,
                         status,
                     });
 
-                    // IF ORDER NOT FOUND
-                    if (!result) {
-                        return res
-                            .status(404)
-                            .json({ success: false, message: "ORDER NOT FOUND" });
-                    }
-
-                    // RETURN SUCCESS RESPONSE
-                    res.json({
-                        success: true,
-                        message: "ORDER UPDATED SUCCESSFULLY",
-                        data: result,
-                    });
+                    // RETURN ORDERS
+                    res.status(201).json(result);
                 } else {
-                    // IF USER IS NOT OWNER OF THE ORDER
-                    return res
-                        .status(404)
-                        .json({ success: false, message: "ORDER NOT FOUND" });
+                    // SEND ERROR RESPONSE
+                    res.status(400).json({ message: "Order not found" });
                 }
             } catch (error) {
                 console.error("ERROR UPDATING ORDER:", error);
-                res
-                    .status(500)
-                    .json({ success: false, message: "INTERNAL SERVER ERROR" });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
 
         // ================================================
         // DELETE ORDER - AUTH REQUIRED
-        // ONLY THE OWNER OF THE ORDER CAN DELETE IT
+        // ONLY ADMIN CAN DELETE
         // ================================================
-        app.delete("/api/orders/:id", AuthMiddleware, async (req, res) => {
+        app.delete("/api/orders/:id", AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
             try {
-                // GET USER ID FROM AUTH MIDDLEWARE
-                let user_id = req.user.id;
-
                 // FETCH ORDER DATA
                 let orderData = await this.orderService.getOrderById(req.params.id);
 
-                // CHECK IF ORDER BELONGS TO THE LOGGED-IN USER
-                if (orderData.user_id == user_id) {
-                    // DELETE THE ORDER
-                    const result = await this.orderService.deleteOrder(req.params.id);
-
-                    // IF ORDER NOT FOUND
-                    if (!result) {
-                        return res
-                            .status(404)
-                            .json({ success: false, message: "ORDER NOT FOUND" });
-                    }
-
-                    // RETURN SUCCESS RESPONSE
-                    res.json({
-                        success: true,
-                        message: "ORDER DELETED SUCCESSFULLY",
-                    });
-                } else {
-                    // IF USER IS NOT OWNER OF THE ORDER
-                    return res
-                        .status(404)
-                        .json({ success: false, message: "ORDER NOT FOUND" });
+                // IF ORDER NOT FOUND
+                if (!orderData) {
+                    // SEND ERROR RESPONSE
+                    res.status(400).json({ message: "Order not found" });
                 }
+
+                // DELETE THE ORDER
+                const result = await this.orderService.deleteOrder(req.params.id);
+
+                // RETURN ORDERS
+                res.status(201).json(result);
+                
             } catch (error) {
                 console.error("ERROR DELETING ORDER:", error);
-                res
-                    .status(500)
-                    .json({ success: false, message: "INTERNAL SERVER ERROR" });
+                // SEND ERROR RESPONSE
+                res.status(400).json({ message: error.message });
             }
         });
     }
