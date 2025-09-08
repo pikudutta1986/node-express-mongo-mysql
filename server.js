@@ -16,6 +16,11 @@ import {connectToMongo} from './database/mongodb.js';
 // CONNECT TO MONGO DB
 connectToMongo();
 
+// BASE ROUTE OF THE SERVER
+app.get("/", async (req, res) => {
+    res.send('Test Node Express Server is running...') 
+});
+
 
 // ================================================
 // AUTH ROUTES
