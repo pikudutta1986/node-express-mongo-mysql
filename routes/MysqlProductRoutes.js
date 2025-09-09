@@ -59,7 +59,7 @@ export class MysqlProductRoutes {
         app.get("/api/product", async (req, res) => {
             try {
                 // CALL SERVICE TO FETCH ALL PRODUCTS
-                const result = await this.productService.getAllProducts();
+                const result = await this.productService.getAllProducts({});
 
                 // RETURN ALL PRODUCTS
                 res.status(201).json(result);

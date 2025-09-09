@@ -80,7 +80,7 @@ export class MysqlProductService
             }
             
             // APPLY SORTING
-            sqlString += `ORDER BY created_at DESC`;
+            sqlString += ` ORDER BY created_at DESC`;
 
             // EXECUTE THE QUERY
             const [result] = await pool.execute(sqlString);
