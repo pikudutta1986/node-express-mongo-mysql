@@ -62,6 +62,9 @@ export class MysqlProductService
             // GET THE MYSQL CONNETION POOL
             const pool = await this.mysqlConnectionPool;
             
+            // INITIALIZE VALUES ARRAY FOR PARAMETERIZED QUERIES
+            const values = [];
+            
             // SQL QUERY STRING
             let sqlString = `SELECT * FROM product WHERE 1=1`;
 
@@ -69,28 +72,97 @@ export class MysqlProductService
             if (filterOptions?.name && filterOptions?.name != '') {
                 // ADD TO QUERY STRING
                 sqlString += ` AND name LIKE ?`;
-                values.push(`%${name}%`);
+                values.push(`%${filterOptions.name}%`);
             }
 
             // IF SEARCHING BY CATEGORY
             if (filterOptions?.category && filterOptions?.category != '') {
                 // ADD TO QUERY STRING
                 sqlString += ` AND category = ?`;
-                values.push(category); 
+                values.push(filterOptions.category); 
+            }
+
+            // IF FILTERING BY MINIMUM PRICE
+            if (filterOptions?.minPrice !== null && filterOptions?.minPrice !== undefined) {
+                sqlString += ` AND price >= ?`;
+                values.push(filterOptions.minPrice);
+            }
+
+            // IF FILTERING BY MAXIMUM PRICE
+            if (filterOptions?.maxPrice !== null && filterOptions?.maxPrice !== undefined) {
+                sqlString += ` AND price <= ?`;
+                values.push(filterOptions.maxPrice);
             }
             
             // APPLY SORTING
-            sqlString += ` ORDER BY created_at DESC`;
+            const sortField = filterOptions?.sort || 'created_at';
+            const sortOrder = filterOptions?.sortOrder || 'DESC';
+            
+            // VALIDATE SORT FIELD TO PREVENT SQL INJECTION
+            const allowedSortFields = ['id', 'name', 'code', 'category', 'price', 'created_at'];
+            const safeSortField = allowedSortFields.includes(sortField) ? sortField : 'created_at';
+            const safeSortOrder = (sortOrder.toUpperCase() === 'ASC' || sortOrder.toUpperCase() === 'DESC') ? sortOrder.toUpperCase() : 'DESC';
+            
+            sqlString += ` ORDER BY ${safeSortField} ${safeSortOrder}`;
+
+            // APPLY PAGINATION IF PROVIDED
+            if (filterOptions?.pageSize && filterOptions?.pageSize > 0) {
+                const page = filterOptions?.page || 1;
+                const pageSize = filterOptions.pageSize;
+                const offset = (page - 1) * pageSize;
+                sqlString += ` LIMIT ? OFFSET ?`;
+                values.push(pageSize, offset);
+            }
 
             // EXECUTE THE QUERY
-            const [result] = await pool.execute(sqlString);
+            const [result] = await pool.execute(sqlString, values);
+
+            // GET TOTAL COUNT FOR PAGINATION (if pagination is used)
+            let totalCount = result.length;
+            if (filterOptions?.pageSize && filterOptions?.pageSize > 0) {
+                // BUILD COUNT QUERY (same filters, no pagination)
+                let countSql = `SELECT COUNT(*) as total FROM product WHERE 1=1`;
+                const countValues = [];
+                
+                if (filterOptions?.name && filterOptions?.name != '') {
+                    countSql += ` AND name LIKE ?`;
+                    countValues.push(`%${filterOptions.name}%`);
+                }
+                if (filterOptions?.category && filterOptions?.category != '') {
+                    countSql += ` AND category = ?`;
+                    countValues.push(filterOptions.category);
+                }
+                if (filterOptions?.minPrice !== null && filterOptions?.minPrice !== undefined) {
+                    countSql += ` AND price >= ?`;
+                    countValues.push(filterOptions.minPrice);
+                }
+                if (filterOptions?.maxPrice !== null && filterOptions?.maxPrice !== undefined) {
+                    countSql += ` AND price <= ?`;
+                    countValues.push(filterOptions.maxPrice);
+                }
+                
+                const [countResult] = await pool.execute(countSql, countValues);
+                totalCount = countResult[0].total;
+            }
 
             // RETURN THE FUNCTION RESPONSE
-            return {
+            const response = {
                 success: true,
                 data: result,
                 message: "Products fetched successfully."
             };
+
+            // ADD PAGINATION INFO IF PAGINATION IS USED
+            if (filterOptions?.pageSize && filterOptions?.pageSize > 0) {
+                response.pagination = {
+                    page: filterOptions.page,
+                    pageSize: filterOptions.pageSize,
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / filterOptions.pageSize)
+                };
+            }
+
+            return response;
         } catch (error)
         {
             console.error("Error fetching products:",error);

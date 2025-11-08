@@ -58,8 +58,20 @@ export class MysqlProductRoutes {
         // ================================================
         app.get("/api/product", async (req, res) => {
             try {
-                // CALL SERVICE TO FETCH ALL PRODUCTS
-                const result = await this.productService.getAllProducts({});
+                // EXTRACT QUERY PARAMETERS
+                const filterOptions = {
+                    name: req.query.name || '',
+                    category: req.query.category || '',
+                    minPrice: req.query.minPrice ? parseInt(req.query.minPrice) : null,
+                    maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice) : null,
+                    page: req.query.page ? parseInt(req.query.page) : 1,
+                    pageSize: req.query.pageSize ? parseInt(req.query.pageSize) : null,
+                    sort: req.query.sort || 'created_at',
+                    sortOrder: req.query.sortOrder || 'DESC'
+                };
+
+                // CALL SERVICE TO FETCH ALL PRODUCTS WITH FILTERS
+                const result = await this.productService.getAllProducts(filterOptions);
 
                 // RETURN ALL PRODUCTS
                 res.status(201).json(result);
