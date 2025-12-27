@@ -54,6 +54,14 @@ import {MongoOrderRoutes} from "./routes/MongoOrderRoutes.js";
 // REGISTER MONGO ORDER ROUTES
 new MongoOrderRoutes(app);
 
+// ================================================
+// ADMIN ROUTES
+// ================================================
+// IMPORT ADMIN ROUTES
+import {AdminRoutes} from "./routes/AdminRoutes.js";
+// REGISTER ADMIN ROUTES
+new AdminRoutes(app);
+
 // START THE EXPRESS SERVER AND LISTEN ON SPECIFIED PORT
 app.listen(process.env.PORT,() =>
 {

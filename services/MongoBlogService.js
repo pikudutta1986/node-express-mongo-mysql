@@ -1,6 +1,7 @@
-
 // IMPORT MONGO BLOG MODEL
 import blog from "../mongo_models/blog.js";
+// IMPORT MONGOOSE
+import mongoose from "mongoose";
 
 // MONGO BLOG SERVICE TO OPERATE CURD OPERATIONS ON MONGO BLOG MODEL 
 export class MongoBlogService

@@ -20,10 +20,11 @@ export class MongoOrderService {
             let orderItems = [];
             let orderTotal = 0;
 
+            const pool = await this.mysqlConnectionPool;
             for (const item of productList) {
                 // QUERY TO MYSQL TABLE TO GET THE PRODUCT INFORMATION
-                const [rows] = await this.mysqlConnectionPool.query(
-                    "SELECT id, name, price FROM products WHERE id = ?",
+                const [rows] = await pool.execute(
+                    "SELECT id, name, price FROM product WHERE id = ?",
                     [item.productId]
                 );
 
