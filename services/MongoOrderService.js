@@ -22,23 +22,26 @@ export class MongoOrderService {
 
             const pool = await this.mysqlConnectionPool;
             for (const item of productList) {
+                // SUPPORT BOTH product_id (from frontend) AND productId (legacy)
+                const productId = item.product_id || item.productId;
+                
                 // QUERY TO MYSQL TABLE TO GET THE PRODUCT INFORMATION
                 const [rows] = await pool.execute(
                     "SELECT id, name, price FROM product WHERE id = ?",
-                    [item.productId]
+                    [productId]
                 );
 
                 // IF NO PRODUCT FOUND
                 if (rows.length === 0) {
                     // THROW THE ERROR
-                    throw new Error(`Product with ID ${item.productId} not found`);
+                    throw new Error(`Product with ID ${productId} not found`);
                 }
 
                 const product = rows[0];
                 const total = product.price * item.quantity;
 
                 orderItems.push({
-                    productId: product.id,
+                    product_id: product.id, // Use product_id to match schema
                     name: product.name,
                     price: product.price,
                     quantity: item.quantity,

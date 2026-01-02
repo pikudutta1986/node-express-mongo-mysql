@@ -55,6 +55,14 @@ import {MongoOrderRoutes} from "./routes/MongoOrderRoutes.js";
 new MongoOrderRoutes(app);
 
 // ================================================
+// PAYMENT ROUTES
+// ================================================
+// IMPORT PAYMENT ROUTES
+import {PaymentRoutes} from "./routes/PaymentRoutes.js";
+// REGISTER PAYMENT ROUTES
+new PaymentRoutes(app);
+
+// ================================================
 // ADMIN ROUTES
 // ================================================
 // IMPORT ADMIN ROUTES

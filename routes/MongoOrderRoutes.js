@@ -30,7 +30,10 @@ export class MongoOrderRoutes {
                 // VALIDATE REQUEST BODY
                 if (!products || !Array.isArray(products)) {
                     // SEND ERROR RESPONSE
-                    res.status(400).json({ message: "No products found to create order" });
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "No products found to create order" 
+                    });
                 }
 
                 // GET USER ID FROM AUTH MIDDLEWARE
@@ -41,7 +44,10 @@ export class MongoOrderRoutes {
                 res.status(201).json(result);
             } catch (error) {
                 // SEND ERROR RESPONSE
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -66,11 +72,14 @@ export class MongoOrderRoutes {
                 // CALL SERVICE TO FETCH ALL ORDERS
                 const result = await this.orderService.getAllOrders(filterOptions);
                 // RETURN ORDERS
-                res.status(201).json(result);
+                res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING ORDERS:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -83,15 +92,21 @@ export class MongoOrderRoutes {
                 const result = await this.orderService.getOrderById(req.params.id);
 
                 // IF ORDER DOES NOT EXIST, RETURN 404
-                if (!result) {
-                    return res.status(400).json({error: "Order id not found." });
+                if (!result || !result.data) {
+                    return res.status(404).json({
+                        success: false,
+                        error: "Order id not found." 
+                    });
                 }
                 // RETURN ORDERS
-                res.status(201).json(result);
+                res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING ORDER BY ID:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -107,7 +122,10 @@ export class MongoOrderRoutes {
                 // VALIDATE UPDATE REQUEST BODY
                 if (!products && !status) {
                     // SEND ERROR RESPONSE
-                    res.status(400).json({ message: "Nothing to update" });
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "Nothing to update" 
+                    });
                 }
 
                 // GET USER ID FROM AUTH MIDDLEWARE
@@ -120,13 +138,17 @@ export class MongoOrderRoutes {
                 let orderData = await this.orderService.getOrderById(req.params.id);
 
                 // IF ORDER NOT FOUND
-                if (!orderData) {
+                if (!orderData || !orderData.data) {
                     // SEND ERROR RESPONSE
-                    res.status(400).json({ message: "Order not found" });
+                    return res.status(404).json({ 
+                        success: false,
+                        message: "Order not found" 
+                    });
                 }
 
                 // CHECK IF ORDER BELONGS TO THE USER OR THE USER IS ADMIN
-                if (orderData.user_id == user_id || role == 'ADMIN') {
+                const order = orderData.data;
+                if (order.user_id == user_id || role == 'ADMIN') {
                     // UPDATE THE ORDER
                     const result = await this.orderService.updateOrder(req.params.id, {
                         products,
@@ -134,15 +156,21 @@ export class MongoOrderRoutes {
                     });
 
                     // RETURN ORDERS
-                    res.status(201).json(result);
+                    res.status(200).json(result);
                 } else {
                     // SEND ERROR RESPONSE
-                    res.status(400).json({ message: "Order not found" });
+                    res.status(403).json({ 
+                        success: false,
+                        message: "You don't have permission to update this order" 
+                    });
                 }
             } catch (error) {
                 console.error("ERROR UPDATING ORDER:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -156,21 +184,27 @@ export class MongoOrderRoutes {
                 let orderData = await this.orderService.getOrderById(req.params.id);
 
                 // IF ORDER NOT FOUND
-                if (!orderData) {
+                if (!orderData || !orderData.data) {
                     // SEND ERROR RESPONSE
-                    res.status(400).json({ message: "Order not found" });
+                    return res.status(404).json({ 
+                        success: false,
+                        message: "Order not found" 
+                    });
                 }
 
                 // DELETE THE ORDER
                 const result = await this.orderService.deleteOrder(req.params.id);
 
-                // RETURN ORDERS
-                res.status(201).json(result);
+                // RETURN SUCCESS RESPONSE
+                res.status(200).json(result);
                 
             } catch (error) {
                 console.error("ERROR DELETING ORDER:", error);
                 // SEND ERROR RESPONSE
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
     }
