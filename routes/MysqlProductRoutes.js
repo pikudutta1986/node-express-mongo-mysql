@@ -98,6 +98,37 @@ export class MysqlProductRoutes {
         });
 
         // ================================================
+        // GET PRODUCT BY SLUG - PUBLIC ACCESS
+        // ================================================
+        app.get("/api/product/slug/:slug", async (req, res) => {
+            try {
+                // EXTRACT ID FROM SLUG (format: name-slug-id)
+                const slug = req.params.slug;
+                const parts = slug.split('-');
+                const productId = parseInt(parts[parts.length - 1], 10);
+
+                if (isNaN(productId)) {
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "Invalid product slug" 
+                    });
+                }
+
+                // CALL SERVICE TO FETCH PRODUCT BY ID
+                const result = await this.productService.getProductById(productId);
+
+                // RETURN PRODUCT DETAILS
+                res.status(200).json(result);
+            } catch (error) {
+                console.error("ERROR FETCHING PRODUCT BY SLUG:", error);
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
+            }
+        });
+
+        // ================================================
         // UPDATE PRODUCT - ONLY ADMIN ALLOWED
         // ================================================
         app.put("/api/product/:id", AuthMiddleware, RoleMiddleware("ADMIN"), async (req, res) => {
