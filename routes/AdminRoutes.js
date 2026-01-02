@@ -26,7 +26,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING DASHBOARD STATS:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -47,7 +50,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING USERS:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -58,7 +64,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING USER:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -69,7 +78,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR UPDATING USER:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -80,7 +92,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR DELETING USER:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -101,7 +116,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING ORDERS:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -110,13 +128,19 @@ export class AdminRoutes {
             try {
                 const { status } = req.body;
                 if (!status) {
-                    return res.status(400).json({ message: "Status is required" });
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "Status is required" 
+                    });
                 }
                 const result = await this.adminService.updateOrderStatus(req.params.id, status);
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR UPDATING ORDER STATUS:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
 
@@ -137,7 +161,10 @@ export class AdminRoutes {
                 res.status(200).json(result);
             } catch (error) {
                 console.error("ERROR FETCHING BLOGS:", error);
-                res.status(400).json({ message: error.message });
+                res.status(400).json({ 
+                    success: false,
+                    message: error.message 
+                });
             }
         });
     }
