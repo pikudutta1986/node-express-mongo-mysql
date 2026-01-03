@@ -13,19 +13,20 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v3
 
-      - name: 🚀 Deploy to domo node server
-        uses: appleboy/scp-action@v0.1.7
+      - name: 🚀 Deploy using rsync
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "./"  # Customize this
-          target: "/var/www/gitrepo/node-express-mongo-mysql"  # Customize this
-          exclude: |
-            .env
-            node_modules
-            .git
+          script: |
+            rsync -avz --delete \
+              --exclude=".env" \
+              --exclude="node_modules" \
+              --exclude=".git" \
+              $GITHUB_WORKSPACE/ \
+              /var/www/gitrepo/node-express-mongo-mysql/
 
       - name: 🔁 SSH into server and restart PM2
         uses: appleboy/ssh-action@v1.0.0
