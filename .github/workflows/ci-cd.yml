@@ -1,0 +1,43 @@
+name: Node.js DEMO CI/CD
+
+on:
+  push:
+    branches:
+      - main  # Change to your deployment branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🚀 Deploy to production server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: "./"  # Customize this
+          target: "/var/www/gitrepo/node-express-mongo-mysql"  # Customize this
+
+      - name: 🔁 SSH into server and restart PM2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            cd /var/www/gitrepo/node-express-mongo-mysql
+
+            # Node dependencies
+            npm install --omit=dev
+
+            # Restart server
+            pm2 reload node-express-mongo-mysql --update-env || pm2 start index.js --name node-express-mongo-mysql
+            pm2 save
