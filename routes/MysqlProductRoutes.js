@@ -107,6 +107,7 @@ export class MysqlProductRoutes {
                 const parts = slug.split('-');
                 const productId = parseInt(parts[parts.length - 1], 10);
 
+                // IF PRODUCT ID IS NON NUMERIC
                 if (isNaN(productId)) {
                     return res.status(400).json({ 
                         success: false,
