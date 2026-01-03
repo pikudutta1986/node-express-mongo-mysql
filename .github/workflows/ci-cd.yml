@@ -13,20 +13,16 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v3
 
-      - name: 🚀 Deploy using rsync
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            rsync -avz --delete \
-              --exclude=".env" \
-              --exclude="node_modules" \
-              --exclude=".git" \
-              $GITHUB_WORKSPACE/ \
-              /var/www/gitrepo/node-express-mongo-mysql/
+      - name: 🚀 Deploy using rsync (safe)
+        run: |
+          rsync -avz --delete \
+            --exclude=".env" \
+            --exclude="node_modules" \
+            --exclude=".git" \
+            -e "ssh -i ${{ secrets.SSH_KEY }} -p 22 -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/gitrepo/node-express-mongo-mysql/
+
 
       - name: 🔁 SSH into server and restart PM2
         uses: appleboy/ssh-action@v1.0.0
