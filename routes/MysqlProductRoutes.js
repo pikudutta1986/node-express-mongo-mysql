@@ -167,6 +167,7 @@ export class MysqlProductRoutes {
                 // RETURN SUCCESS RESPONSE AFTER DELETION
                 res.status(201).json(result);
             } catch (error) {
+                // ON ERROR
                 console.error("ERROR DELETING PRODUCT:", error);
                 res.status(400).json({ message: error.message });
             }
