@@ -10,31 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      
-    - name: 🔑 Load SSH key
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v3
 
-    - name: 🚀 Deploy using rsync
-      run: |
-        rsync -avz --delete \
-          --exclude=".env" \
-          --exclude="node_modules" \
-          --exclude=".git" \
-          -e "ssh -p 22 -o StrictHostKeyChecking=no" \
-          ./ \
-          ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/gitrepo/node-express-mongo-mysql/
+      - name: 🚀 Deploy to domo server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: "./"  # Customize this
+          target: "/var/www/gitrepo/node-express-mongo-mysql"  # Customize this
 
-    - name: 🔁 Restart PM2
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          cd /var/www/gitrepo/node-express-mongo-mysql
-          npm install --omit=dev
-          pm2 reload node-express-mongo-mysql --update-env || \
-          pm2 start server.js --name node-express-mongo-mysql
-          pm2 save
+      - name: 🔁 SSH into server and restart PM2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            cd /var/www/gitrepo/node-express-mongo-mysql
+
+            # Node dependencies
+            npm install --omit=dev
+
+            # Restart server
+            pm2 reload node-express-mongo-mysql --update-env || pm2 start index.js --name node-express-mongo-mysql
+            pm2 save
