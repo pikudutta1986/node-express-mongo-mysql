@@ -22,6 +22,10 @@ jobs:
           port: 22
           source: "./"  # Customize this
           target: "/var/www/gitrepo/node-express-mongo-mysql"  # Customize this
+          exclude: |
+            .env
+            node_modules
+            .git
 
       - name: 🔁 SSH into server and restart PM2
         uses: appleboy/ssh-action@v1.0.0
