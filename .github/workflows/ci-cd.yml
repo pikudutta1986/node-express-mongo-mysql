@@ -13,7 +13,7 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v3
 
-      - name: 🚀 Deploy to production server
+      - name: 🚀 Deploy to domo node server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -39,5 +39,5 @@ jobs:
             npm install --omit=dev
 
             # Restart server
-            pm2 reload node-express-mongo-mysql --update-env || pm2 start index.js --name node-express-mongo-mysql
+            pm2 reload node-express-mongo-mysql --update-env || pm2 start server.js --name node-express-mongo-mysql
             pm2 save
