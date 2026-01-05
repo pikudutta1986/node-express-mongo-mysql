@@ -67,8 +67,9 @@ export class AdminService {
                 .lean();
 
             // GET RECENT USERS (last 5)
+            // Use id for sorting since created_at doesn't exist in user table
             const [recentUsers] = await pool.execute(
-                "SELECT id, name, email, role, created_at FROM user ORDER BY created_at DESC LIMIT 5"
+                "SELECT id, name, email, role FROM user ORDER BY id DESC LIMIT 5"
             );
 
             return {
@@ -112,10 +113,11 @@ export class AdminService {
         try {
             const pool = await this.mysqlConnectionPool;
             const page = filterOptions?.page || 1;
-            const pageSize = filterOptions?.pageSize || 10;
-            const offset = (page - 1) * pageSize;
+            const pageSize = parseInt(filterOptions?.pageSize || 10, 10);
+            const offset = parseInt((page - 1) * pageSize, 10);
 
-            let sqlString = "SELECT id, name, email, role, created_at FROM user WHERE 1=1";
+            // SELECT fields (removed created_at as it doesn't exist in the user table)
+            let sqlString = "SELECT id, name, email, role FROM user WHERE 1=1";
             const values = [];
 
             // FILTER BY ROLE
@@ -132,13 +134,13 @@ export class AdminService {
             }
 
             // GET TOTAL COUNT
-            let countSql = sqlString.replace("SELECT id, name, email, role, created_at FROM user", "SELECT COUNT(*) as total FROM user");
+            let countSql = sqlString.replace("SELECT id, name, email, role FROM user", "SELECT COUNT(*) as total FROM user");
             const [countResult] = await pool.execute(countSql, values);
             const total = countResult[0].total;
 
-            // ADD PAGINATION
-            sqlString += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-            values.push(pageSize, offset);
+            // ADD SORTING AND PAGINATION
+            // Use id for sorting since created_at doesn't exist in user table
+            sqlString += ` ORDER BY id DESC LIMIT ${pageSize} OFFSET ${offset}`;
 
             // EXECUTE QUERY
             const [users] = await pool.execute(sqlString, values);
@@ -166,7 +168,8 @@ export class AdminService {
     async getUserById(userId) {
         try {
             const pool = await this.mysqlConnectionPool;
-            const sqlString = "SELECT id, name, email, role, created_at FROM user WHERE id = ?";
+            // Removed created_at as it doesn't exist in the user table
+            const sqlString = "SELECT id, name, email, role FROM user WHERE id = ?";
             const [rows] = await pool.execute(sqlString, [userId]);
 
             if (rows.length === 0) {

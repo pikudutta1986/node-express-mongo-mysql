@@ -4,9 +4,19 @@ dotenv.config();
 
 // IMPORT THE EXPRESS LIBRARY.
 import express from 'express';
+// IMPORT CORS FOR CROSS-ORIGIN REQUESTS
+import cors from 'cors';
 
 // CREATE A EXPRESS APP
 const app = express();
+
+// ENABLE CORS FOR ALL ORIGINS (ALLOW REQUESTS FROM ANY FRONTEND)
+app.use(cors({
+    origin: '*', // Allow all origins - change to specific domain in production
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 
 // PARSE PAYLOAD AS JSON FOR EXPRESS APP
 app.use(express.json());
@@ -69,6 +79,14 @@ new PaymentRoutes(app);
 import {AdminRoutes} from "./routes/AdminRoutes.js";
 // REGISTER ADMIN ROUTES
 new AdminRoutes(app);
+
+// ================================================
+// SETTINGS ROUTES
+// ================================================
+// IMPORT SETTINGS ROUTES
+import {SettingsRoutes} from "./routes/SettingsRoutes.js";
+// REGISTER SETTINGS ROUTES
+new SettingsRoutes(app);
 
 // START THE EXPRESS SERVER AND LISTEN ON SPECIFIED PORT
 app.listen(process.env.PORT,() =>

@@ -2,15 +2,46 @@
 import Razorpay from "razorpay";
 // IMPORT CRYPTO FOR SIGNATURE VERIFICATION
 import crypto from "crypto";
+// IMPORT SETTINGS SERVICE TO GET RAZORPAY KEYS
+import { SettingsService } from "./SettingsService.js";
 
 // PAYMENT SERVICE TO HANDLE RAZORPAY OPERATIONS
 export class PaymentService {
     constructor() {
-        // INITIALIZE RAZORPAY INSTANCE WITH API KEYS FROM ENVIRONMENT
-        this.razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
-            key_secret: process.env.RAZORPAY_KEY_SECRET || "WXgQyrXx4LzeKm1f57M4urxF"
-        });
+        this.settingsService = new SettingsService();
+        this.razorpay = null;
+        this.initializeRazorpay();
+    }
+
+    // Initialize Razorpay with keys from settings
+    async initializeRazorpay() {
+        try {
+            const keyIdResult = await this.settingsService.getSetting('razorpay_key_id');
+            const keySecretResult = await this.settingsService.getSetting('razorpay_key_secret');
+            
+            const razorpayKeyId = keyIdResult?.data?.value || process.env.RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag";
+            const razorpayKeySecret = keySecretResult?.data?.value || process.env.RAZORPAY_KEY_SECRET || "WXgQyrXx4LzeKm1f57M4urxF";
+            
+            this.razorpay = new Razorpay({
+                key_id: razorpayKeyId,
+                key_secret: razorpayKeySecret
+            });
+        } catch (error) {
+            console.error("Error initializing Razorpay:", error);
+            // Fallback to environment variables or defaults
+            this.razorpay = new Razorpay({
+                key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
+                key_secret: process.env.RAZORPAY_KEY_SECRET || "WXgQyrXx4LzeKm1f57M4urxF"
+            });
+        }
+    }
+
+    // Get Razorpay instance, reinitialize if needed
+    async getRazorpayInstance() {
+        if (!this.razorpay) {
+            await this.initializeRazorpay();
+        }
+        return this.razorpay;
     }
 
     // ================================================
@@ -29,6 +60,26 @@ export class PaymentService {
 
             if (!receipt) {
                 receipt = `receipt_${Date.now()}`;
+            }
+
+            // Get Razorpay instance (will reinitialize if needed)
+            const razorpay = await this.getRazorpayInstance();
+            
+            // Refresh keys from settings before creating order
+            try {
+                const keyIdResult = await this.settingsService.getSetting('razorpay_key_id');
+                const keySecretResult = await this.settingsService.getSetting('razorpay_key_secret');
+                
+                if (keyIdResult?.data?.value && keySecretResult?.data?.value) {
+                    // Reinitialize if keys changed
+                    this.razorpay = new Razorpay({
+                        key_id: keyIdResult.data.value,
+                        key_secret: keySecretResult.data.value
+                    });
+                }
+            } catch (error) {
+                console.error("Error refreshing Razorpay keys:", error);
+                // Continue with existing instance
             }
 
             // CREATE RAZORPAY ORDER OPTIONS
@@ -70,9 +121,19 @@ export class PaymentService {
                 throw new Error("Missing payment verification parameters");
             }
 
+            // Get Razorpay instance and refresh keys
+            await this.getRazorpayInstance();
+            let secretKey = this.razorpay.key_secret;
+            try {
+                const keySecretResult = await this.settingsService.getSetting('razorpay_key_secret');
+                secretKey = keySecretResult?.data?.value || this.razorpay.key_secret;
+            } catch (error) {
+                console.error("Error getting Razorpay secret key:", error);
+            }
+
             // GENERATE SIGNATURE FOR VERIFICATION
             const generated_signature = crypto
-                .createHmac("sha256", this.razorpay.key_secret)
+                .createHmac("sha256", secretKey)
                 .update(razorpay_order_id + "|" + razorpay_payment_id)
                 .digest("hex");
 

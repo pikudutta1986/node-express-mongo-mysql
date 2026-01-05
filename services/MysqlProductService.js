@@ -95,23 +95,46 @@ export class MysqlProductService
             }
             
             // APPLY SORTING
-            const sortField = filterOptions?.sort || 'created_at';
+            let sortField = filterOptions?.sort || 'created_at';
             const sortOrder = filterOptions?.sortOrder || 'DESC';
+            
+            // MAP COMMON SORT ALIASES TO DATABASE FIELDS
+            const sortFieldMap = {
+                'newest': 'created_at',
+                'oldest': 'created_at',
+                'name': 'name',
+                'price': 'price',
+                'price-low': 'price',
+                'price-high': 'price'
+            };
+            
+            // IF SORT FIELD IS IN MAP, USE MAPPED VALUE
+            if (sortFieldMap[sortField.toLowerCase()]) {
+                sortField = sortFieldMap[sortField.toLowerCase()];
+            }
             
             // VALIDATE SORT FIELD TO PREVENT SQL INJECTION
             const allowedSortFields = ['id', 'name', 'code', 'category', 'price', 'created_at'];
             const safeSortField = allowedSortFields.includes(sortField) ? sortField : 'created_at';
-            const safeSortOrder = (sortOrder.toUpperCase() === 'ASC' || sortOrder.toUpperCase() === 'DESC') ? sortOrder.toUpperCase() : 'DESC';
+            
+            // DETERMINE SORT ORDER BASED ON SORT FIELD ALIAS
+            let safeSortOrder = (sortOrder.toUpperCase() === 'ASC' || sortOrder.toUpperCase() === 'DESC') ? sortOrder.toUpperCase() : 'DESC';
+            if (filterOptions?.sort === 'newest' || filterOptions?.sort === 'price-high') {
+                safeSortOrder = 'DESC';
+            } else if (filterOptions?.sort === 'oldest' || filterOptions?.sort === 'price-low') {
+                safeSortOrder = 'ASC';
+            }
             
             sqlString += ` ORDER BY ${safeSortField} ${safeSortOrder}`;
 
             // APPLY PAGINATION IF PROVIDED
             if (filterOptions?.pageSize && filterOptions?.pageSize > 0) {
                 const page = filterOptions?.page || 1;
-                const pageSize = filterOptions.pageSize;
-                const offset = (page - 1) * pageSize;
-                sqlString += ` LIMIT ? OFFSET ?`;
-                values.push(pageSize, offset);
+                const pageSize = parseInt(filterOptions.pageSize, 10);
+                const offset = parseInt((page - 1) * pageSize, 10);
+                // Use integers directly in SQL string (safe after validation)
+                // MySQL prepared statements can have issues with LIMIT/OFFSET placeholders
+                sqlString += ` LIMIT ${pageSize} OFFSET ${offset}`;
             }
 
             // EXECUTE THE QUERY
