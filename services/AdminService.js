@@ -57,6 +57,100 @@ export class AdminService {
             ]);
             const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
 
+            // GET MONTHLY REVENUE FOR LAST 12 MONTHS (for chart)
+            const currentDate = new Date();
+            const twelveMonthsAgo = new Date();
+            twelveMonthsAgo.setMonth(currentDate.getMonth() - 11);
+            twelveMonthsAgo.setDate(1);
+            twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+            const monthlyRevenue = await Order.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: twelveMonthsAgo }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: "$createdAt" },
+                            month: { $month: "$createdAt" }
+                        },
+                        revenue: { $sum: "$orderTotal" }
+                    }
+                },
+                {
+                    $sort: { "_id.year": 1, "_id.month": 1 }
+                }
+            ]);
+
+            // Format monthly revenue data
+            const revenueByMonth = [];
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(twelveMonthsAgo);
+                date.setMonth(date.getMonth() + i);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                
+                const revenueData = monthlyRevenue.find(r => r._id.year === year && r._id.month === month);
+                revenueByMonth.push({
+                    month: monthNames[date.getMonth()],
+                    revenue: revenueData ? revenueData.revenue : 0
+                });
+            }
+
+            // GET WEEKLY USER GROWTH FOR LAST 7 DAYS (for chart)
+            // Note: This requires created_at column in user table (run admin-migration-simple.sql)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(currentDate.getDate() - 6);
+            sevenDaysAgo.setHours(0, 0, 0, 0);
+
+            let userGrowthByDay = [];
+            
+            try {
+                // Check if created_at column exists
+                const [dailyUsers] = await pool.execute(
+                    `SELECT DATE(created_at) as date, COUNT(*) as count 
+                    FROM user 
+                    WHERE created_at >= ? 
+                    GROUP BY DATE(created_at) 
+                    ORDER BY date ASC`,
+                    [sevenDaysAgo]
+                );
+
+                // Format daily user growth data
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(sevenDaysAgo);
+                    date.setDate(date.getDate() + i);
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    const userData = dailyUsers.find(u => {
+                        const userDate = new Date(u.date);
+                        return userDate.toISOString().split('T')[0] === dateStr;
+                    });
+                    
+                    userGrowthByDay.push({
+                        day: dayNames[date.getDay()],
+                        users: userData ? userData.count : 0
+                    });
+                }
+            } catch (error) {
+                // If created_at column doesn't exist, return empty array
+                console.warn('User growth query failed (created_at column might not exist):', error.message);
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                // Return 7 days of zero data as fallback
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(sevenDaysAgo);
+                    date.setDate(date.getDate() + i);
+                    userGrowthByDay.push({
+                        day: dayNames[date.getDay()],
+                        users: 0
+                    });
+                }
+            }
+
             // GET TOTAL BLOGS COUNT
             const totalBlogs = await Blog.countDocuments();
 
@@ -90,8 +184,10 @@ export class AdminService {
                         shipped: shippedOrders
                     },
                     revenue: {
-                        total: totalRevenue
+                        total: totalRevenue,
+                        byMonth: revenueByMonth
                     },
+                    userGrowth: userGrowthByDay,
                     blogs: {
                         total: totalBlogs
                     },
