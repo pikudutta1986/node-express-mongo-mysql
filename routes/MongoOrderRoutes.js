@@ -24,8 +24,8 @@ export class MongoOrderRoutes {
         // ================================================
         app.post("/api/orders", AuthMiddleware, async (req, res) => {
             try {
-                // EXTRACT USER_ID AND PRODUCTS FROM REQUEST BODY
-                const { products } = req.body;
+                // EXTRACT PRODUCTS, CUSTOMER INFO, SHIPPING ADDRESS, PAYMENT INFO, AND FINANCIAL DATA FROM REQUEST BODY
+                const { products, customerInfo, shippingAddress, paymentInfo, financialData } = req.body;
 
                 // VALIDATE REQUEST BODY
                 if (!products || !Array.isArray(products)) {
@@ -36,11 +36,35 @@ export class MongoOrderRoutes {
                     });
                 }
 
+                // VALIDATE CUSTOMER INFO (OPTIONAL BUT RECOMMENDED)
+                if (customerInfo && (!customerInfo.fullName || !customerInfo.email || !customerInfo.phone)) {
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "Customer information is incomplete (fullName, email, phone required)" 
+                    });
+                }
+
+                // VALIDATE SHIPPING ADDRESS (OPTIONAL BUT RECOMMENDED)
+                if (shippingAddress && (!shippingAddress.addressLine1 || !shippingAddress.city || 
+                    !shippingAddress.state || !shippingAddress.postalCode || !shippingAddress.country)) {
+                    return res.status(400).json({ 
+                        success: false,
+                        message: "Shipping address is incomplete (addressLine1, city, state, postalCode, country required)" 
+                    });
+                }
+
                 // GET USER ID FROM AUTH MIDDLEWARE
                 let user_id = req.user.id;
 
-                // CALL SERVICE TO CREATE ORDER
-                const result = await this.orderService.createOrder(user_id, products);
+                // CALL SERVICE TO CREATE ORDER WITH ALL DATA INCLUDING FINANCIAL BREAKDOWN
+                const result = await this.orderService.createOrder(
+                    user_id, 
+                    products, 
+                    customerInfo, 
+                    shippingAddress,
+                    paymentInfo,
+                    financialData
+                );
                 res.status(201).json(result);
             } catch (error) {
                 // SEND ERROR RESPONSE

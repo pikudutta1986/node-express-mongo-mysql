@@ -15,10 +15,10 @@ export class MongoOrderService {
     // ================================================
     // FUNCTION TO CREATE ORDER
     // ================================================
-    async createOrder(user_id, productList) {
+    async createOrder(user_id, productList, customerInfo, shippingAddress, paymentInfo = {}, financialData = {}) {
         try {
             let orderItems = [];
-            let orderTotal = 0;
+            let subtotal = 0;
 
             const pool = await this.mysqlConnectionPool;
             for (const item of productList) {
@@ -48,17 +48,62 @@ export class MongoOrderService {
                     total,
                 });
 
-                orderTotal += total;
+                subtotal += total;
+            }
+
+            // CALCULATE FINANCIAL BREAKDOWN
+            const taxRate = financialData.taxRate !== undefined ? financialData.taxRate : 0;
+            const shippingCost = financialData.shippingCost !== undefined ? financialData.shippingCost : 0;
+            const taxAmount = financialData.taxAmount !== undefined ? financialData.taxAmount : (subtotal * taxRate / 100);
+            const orderTotal = subtotal + taxAmount + shippingCost;
+
+            // PREPARE ORDER DATA
+            const orderData = {
+                user_id: user_id,
+                products: orderItems,
+                subtotal: subtotal,
+                taxRate: taxRate,
+                taxAmount: taxAmount,
+                shippingCost: shippingCost,
+                orderTotal: orderTotal,
+                status: "pending",
+                createdAt: new Date(),
+            };
+
+            // ADD CUSTOMER INFO IF PROVIDED
+            if (customerInfo && customerInfo.fullName && customerInfo.email && customerInfo.phone) {
+                orderData.customerInfo = {
+                    fullName: customerInfo.fullName,
+                    email: customerInfo.email,
+                    phone: customerInfo.phone
+                };
+            }
+
+            // ADD SHIPPING ADDRESS IF PROVIDED
+            if (shippingAddress && shippingAddress.addressLine1 && shippingAddress.city && 
+                shippingAddress.state && shippingAddress.postalCode && shippingAddress.country) {
+                orderData.shippingAddress = {
+                    fullName: shippingAddress.fullName || customerInfo?.fullName || 'N/A',
+                    addressLine1: shippingAddress.addressLine1,
+                    addressLine2: shippingAddress.addressLine2 || '',
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    postalCode: shippingAddress.postalCode,
+                    country: shippingAddress.country,
+                    phone: shippingAddress.phone || customerInfo?.phone || ''
+                };
+            }
+
+            // ADD PAYMENT INFO IF PROVIDED
+            if (paymentInfo) {
+                if (paymentInfo.paymentMethod) orderData.paymentMethod = paymentInfo.paymentMethod;
+                if (paymentInfo.razorpay_order_id) orderData.razorpay_order_id = paymentInfo.razorpay_order_id;
+                if (paymentInfo.razorpay_payment_id) orderData.razorpay_payment_id = paymentInfo.razorpay_payment_id;
+                if (paymentInfo.razorpay_signature) orderData.razorpay_signature = paymentInfo.razorpay_signature;
             }
 
             // SAVE ORDER TO MONGO DB
-            const order = new Order({
-                user_id: user_id,
-                products: orderItems,
-                orderTotal,
-                status: "pending",
-                createdAt: new Date(),
-            });
+            const order = new Order(orderData);
             const result = await order.save();
 
             // RETURN THE FUNCTION RESPONSE
